@@ -26,4 +26,9 @@ class BankAccount extends Model
     {
         return $this->belongsTo(Bank::class);
     }
+
+    public function submission()
+    {
+        return $this->belongsTo(Submission::class);
+    }
 }

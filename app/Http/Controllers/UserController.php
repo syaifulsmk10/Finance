@@ -96,77 +96,106 @@ class UserController extends Controller
 
 
  
-    public function index()
-    {
+    public function index(Request $request)
+{
+    $search = $request->input('search');
+    $perPage = $request->input('per_page', 10); 
 
-        $users = User::with(['role', 'position', 'bankAccounts', 'bankAccounts.bank', 'department', 'staff.manager',  'staff.staffMember'])->get();
-        
-        return response()->json([
-            'data' => $users, 'message' => 'Users retrieved successfully'
-        ]);
+
+    $query = User::with(['role', 'position', 'bankAccounts', 'bankAccounts.bank', 'department', 'staff.manager', 'staff.staffMember']);
+
+
+    if ($search) {
+        $query->where(function ($q) use ($search) {
+            $q->where('name', 'LIKE', "%{$search}%")  
+                ->orWhere('nip', 'LIKE', "%{$search}%") 
+                ->orWhere('email', 'LIKE', "%{$search}%") 
+                ->orWhereHas('department', function ($q) use ($search) { 
+                    $q->where('name', 'LIKE', "%{$search}%");
+                })
+                ->orWhereHas('position', function ($q) use ($search) {  
+                    $q->where('name', 'LIKE', "%{$search}%");
+                })
+                ->orWhereHas('bankAccounts', function ($q) use ($search) { 
+                    $q->where('account_name', 'LIKE', "%{$search}%") 
+                        ->orWhere('account_number', 'LIKE', "%{$search}%") 
+                        ->orWhereHas('bank', function ($q) use ($search) { 
+                            $q->where('name', 'LIKE', "%{$search}%");
+                        });
+                });
+        });
     }
 
-    public function store(Request $request)
-    {
+    $users = $query->paginate($perPage);
 
-       
-
-        $validator = Validator::make($request->all(), [
-            'position_id' => 'required',
-            'department_id' => 'required',
-            'name' => 'required',
-            'username' => 'required|unique:users',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|min:6',
-            'level' => 'sometimes|integer', 
-            'path.*' => 'required|file|image|max:2048'
-        ]);
-    
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validation Error',
-                'errors' => $validator->errors()
-            ], 422);
-        }
+    return response()->json([
+        'data' => $users, 'message' => 'Users retrieved successfully'
+    ]);
+}
 
 
-        if (!$request->hasFile('path')) 
-            return response()->json([
-                'message' => 'path cant null',
-            ], 200);
-            
-        $image = $request->file('path');
-        $imageName = 'VA' . Str::random(40) . '.' . $image->getClientOriginalName();
-        $image->move(public_path('uploads/profiles'), $imageName);
-        $imagePath = $imageName;
-
-        logger()->debug('reached here - 3');
-
-        $user = User::create([
-            'role_id' => 2,
-            'position_id' => $request->position_id,
-            'department_id' => $request->department_id,
-            'name' => $request->name,
-            'username' => $request->username,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'path' => $imagePath
-        ]);
-        $BankAccount = BankAccount::create([
-            'user_id' => $user->id,
-            'bank_id' => $request->bank_id,
-            'account_name' => $request->account_name,
-            'account_number' => $request->account_number
-        ]);
-
-
-        $Staff = Staff::create([
-            'manager_id' => $request->manager_id,
-            'staff_id' => $user->id
-        ]);
-
-        return response()->json(['message' => 'User created successfully'], 201);
-    }
+  public function store(Request $request)
+  {
+      $validator = Validator::make($request->all(), [
+          'position_id' => 'required',
+          'department_id' => 'required',
+          'name' => 'required',
+          'username' => 'required|unique:users',
+          'email' => 'required|email|unique:users',
+          'password' => 'required|min:6',
+          'level' => 'sometimes|integer', 
+          'path.*' => 'required|file|image|max:2048',
+          'bank.*.bank_id' => 'required|integer',  // validate nested bank_id
+          'bank.*.account_name' => 'required|string',
+          'bank.*.account_number' => 'required|string'
+      ]);
+  
+      if ($validator->fails()) {
+          return response()->json([
+              'message' => 'Validation Error',
+              'errors' => $validator->errors()
+          ], 422);
+      }
+  
+      if (!$request->hasFile('path')) {
+          return response()->json([
+              'message' => 'path cant be null',
+          ], 200);
+      }
+  
+      $image = $request->file('path');
+      $imageName = 'VA' . Str::random(40) . '.' . $image->getClientOriginalName();
+      $image->move(public_path('uploads/profiles'), $imageName);
+      $imagePath = $imageName;
+  
+      $user = User::create([
+          'role_id' => 2,
+          'position_id' => $request->position_id,
+          'department_id' => $request->department_id,
+          'name' => $request->name,
+          'username' => $request->username,
+          'email' => $request->email,
+          'password' => Hash::make($request->password),
+          'path' => $imagePath
+      ]);
+  
+      foreach ($request->bank as $bank) {
+          BankAccount::create([
+              'user_id' => $user->id,
+              'bank_id' => $bank['bank_id'], // Access bank_id from nested array
+              'account_name' => $bank['account_name'],
+              'account_number' => $bank['account_number']
+          ]);
+      }
+  
+      Staff::create([
+          'manager_id' => $request->manager_id,
+          'staff_id' => $user->id
+      ]);
+  
+      return response()->json(['message' => 'User created successfully'], 201);
+  }
+  
 
     public function show($id)
     {
@@ -191,9 +220,9 @@ public function update(Request $request, $id)
         'password' => 'sometimes|nullable|min:6',
         'level' => 'sometimes|integer',
         'path.*' => 'sometimes|file|image|max:2048',
-        'bank_id' => 'sometimes|required',
-        'account_name' => 'sometimes|required',
-        'account_number' => 'sometimes|required',
+        'bank.*.bank_id' => 'sometimes|required',
+        'bank.*.account_name' => 'sometimes|required',
+        'bank.*.account_number' => 'sometimes|required',
         'manager_id' => 'sometimes|required'
     ]);
 
@@ -234,19 +263,18 @@ public function update(Request $request, $id)
 
     $user->save();
 
-    $bankAccount = BankAccount::where('user_id', $user->id)->first();
-    
-    if ($request->has('bank_id')) {
-        $bankAccount->bank_id = $request->bank_id;
+    if ($request->has('bank')) {
+        BankAccount::where('user_id', $user->id)->delete();
+
+        foreach ($request->bank as $bankData) {
+            BankAccount::create([
+                'user_id' => $user->id,
+                'bank_id' => $bankData['bank_id'],
+                'account_name' => $bankData['account_name'],
+                'account_number' => $bankData['account_number']
+            ]);
+        }
     }
-    if ($request->has('account_name')) {
-        $bankAccount->account_name = $request->account_name;
-    }
-    if ($request->has('account_number')) {
-        $bankAccount->account_number = $request->account_number;
-    }
-    
-    $bankAccount->save();
 
     $staff = Staff::where('staff_id', $user->id)->first();
     
@@ -260,26 +288,82 @@ public function update(Request $request, $id)
 }
 
 
+
+
+
+
 public function destroy($id)
 {
-    // Temukan user berdasarkan ID
     $user = User::findOrFail($id);
 
-    // Hapus gambar profil jika ada
+
     if ($user->path && file_exists(public_path('uploads/profiles/' . $user->path))) {
         unlink(public_path('uploads/profiles/' . $user->path));
     }
 
-    // Hapus data bank yang terkait dengan user
     BankAccount::where('user_id', $user->id)->delete();
 
-    // Hapus data staff yang terkait dengan user
     Staff::where('staff_id', $user->id)->delete();
 
-    // Hapus user
     $user->delete();
 
     return response()->json(['message' => 'User deleted successfully'], 200);
+}
+
+
+
+
+public function updateprofiles(Request $request){
+    $user = User::where('id', Auth::user()->id)->first();
+
+    if ($request->has('position_id')) {
+        $user->position_id = $request->position_id;
+    }
+    if ($request->has('department_id')) {
+        $user->department_id = $request->department_id;
+    }
+    if ($request->has('name')) {
+        $user->name = $request->name;
+    }
+    if ($request->has('username')) {
+        $user->username = $request->username;
+    }
+    if ($request->has('email')) {
+        $user->email = $request->email;
+    }
+    if ($request->has('password')) {
+        $user->password = Hash::make($request->password);
+    }
+
+    if ($request->hasFile('path')) {
+        $image = $request->file('path');
+        $imageName = 'VA' . Str::random(40) . '.' . $image->getClientOriginalName();
+        $image->move(public_path('uploads/profiles'), $imageName);
+        $user->path = $imageName;
+    }
+
+    $user->save();
+
+
+    if ($request->has('bank')) {
+        BankAccount::where('user_id', $user->id)->delete();
+
+        foreach ($request->bank as $bankData) {
+            BankAccount::create([
+                'user_id' => $user->id,
+                'bank_id' => $bankData['bank_id'],
+                'account_name' => $bankData['account_name'],
+                'account_number' => $bankData['account_number']
+            ]);
+        }
+    }
+
+
+    return response()->json([
+        'message' => 'update profile successfully'
+    ]);
+
+
 }
 
 

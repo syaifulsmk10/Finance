@@ -92,42 +92,104 @@ class AdminApprovalController extends Controller
     $role = $user->role->name;
 
     if ($role === 'GA') {
-        $submissions = Submission::whereHas('adminApprovals',  function($query) use ($user) {
-            $query->where('status', 'pending')
-                  ->where('user_id', $user->id); 
+        $submissions = Submission::whereHas('adminApprovals', function($query) use ($user) {
+            $query->where('user_id', $user->id)
+                  ->where(function($query) {
+                      $query->where('status', 'pending')
+                            ->orWhere('status', 'approved')
+                            ->orWhere('status', 'denied');
+                  });
         })->with('adminApprovals', 'items', 'files')->get();
     }
-
+        
     elseif ($role === 'Manager') {
         $staffIds = Staff::where('manager_id', $user->id)->pluck('staff_id');
-
+    
         $submissions = Submission::whereIn('user_id', $staffIds)
             ->whereHas('adminApprovals', function($query) use ($user) {
-                $query->where('status', 'pending')
-                      ->where('user_id', $user->id); 
-            })->with('adminApprovals')->get();
+                $query->where('user_id', $user->id)
+                      ->where(function($query) {
+                          $query->where('status', 'pending')
+                                ->orWhere('status', 'approved')
+                                ->orWhere('status', 'denied');
+                      });
+            })->with('adminApprovals', 'items', 'files')->get();
     }
-
-    elseif ($role === 'CEO') {
+    
+    elseif ($role === 'CEO' || $role === 'Finance') {
         $submissions = Submission::whereHas('adminApprovals', function($query) use ($user) {
-            $query->where('status', 'pending')
-                  ->where('user_id', $user->id); 
-        })->with('adminApprovals')->get();
+            $query->where('user_id', $user->id)
+                  ->where(function($query) {
+                      $query->where('status', 'pending')
+                            ->orWhere('status', 'approved')
+                            ->orWhere('status', 'denied');
+                  });
+        })->with('adminApprovals', 'items', 'files')->get();
     }
-
-    elseif ($role === 'Finance') {
-        $submissions = Submission::whereHas('adminApprovals', function($query) use ($user) {
-            $query->where('status', 'pending')
-                  ->where('user_id', $user->id); 
-        })->with('adminApprovals')->get();
-    }elseif($role === 'Employee'){
-        $submissions = 'Sory Your login not admin';
+    
+    elseif ($role === 'Employee') {
+        $submissions = 'Sorry, you are not authorized as an admin.';
     }
-
+    
     return response()->json([
         'submissions' => $submissions
     ], 200);
+    
 }
+
+
+public function detail($id)
+{
+
+    $user = Auth::user();
+    $role = $user->role->name;
+    $submission = null;
+
+    if ($role === 'GA') {
+        $submission = Submission::whereHas('adminApprovals', function($query) use ($user) {
+            $query->where('user_id', $user->id)
+                  ->where(function($query) {
+                      $query->where('status', 'pending')
+                            ->orWhere('status', 'approved')
+                            ->orWhere('status', 'denied');
+                  });
+        })->with('adminApprovals', 'items', 'files')->find($id);
+    }elseif ($role === 'Manager') {
+        $staffIds = Staff::where('manager_id', $user->id)->pluck('staff_id');
+    
+        $submission = Submission::whereIn('user_id', $staffIds)
+            ->whereHas('adminApprovals', function($query) use ($user) {
+                $query->where('user_id', $user->id)
+                      ->where(function($query) {
+                          $query->where('status', 'pending')
+                                ->orWhere('status', 'approved')
+                                ->orWhere('status', 'denied');
+                      });
+            })->with('adminApprovals', 'items', 'files')->find($id);
+    } elseif ($role === 'CEO' || $role === 'Finance') {
+        $submission = Submission::whereHas('adminApprovals', function($query) use ($user) {
+            $query->where('user_id', $user->id)
+                  ->where(function($query) {
+                      $query->where('status', 'pending')
+                            ->orWhere('status', 'approved')
+                            ->orWhere('status', 'denied');
+                  });
+        })->with('adminApprovals', 'items', 'files')->get();
+    }elseif($role === 'Employee'){
+        $submission = 'Sory Your login not admin';
+    }
+    
+    if (!$submission) {
+        return response()->json([
+            'message' => 'Submission not found or unauthorized access'
+        ], 404);
+    }
+
+    return response()->json([
+        'submission' => $submission
+    ], 200);
+}
+
 
 
     public function approve(Request $request, $submissionId)
@@ -136,13 +198,6 @@ class AdminApprovalController extends Controller
         $approval = AdminApproval::where('submission_id', $submissionId)
             ->where('user_id', $user->id)
             ->firstOrFail();
-    
-        $approval->update([
-            'status' => 'approved',
-            'notes' => $request->input('notes', null),
-            'approved_at' => Carbon::now(),
-        ]);
-    
 
         if ($user->role->name == 'GA') {
             $submission = Submission::find($submissionId);
@@ -200,6 +255,27 @@ class AdminApprovalController extends Controller
     
         return response()->json(["message" => "Approval berhasil"], 200);
     }
+
+
+    public function denied(Request $request, $submissionId)
+{
+    $user = Auth::user();
+    $approval = AdminApproval::where('submission_id', $submissionId)
+        ->where('user_id', $user->id)
+        ->firstOrFail();
+
+    $approval->update([
+        'status' => 'denied',
+        'notes' => $request->input('notes', null),
+        'approved_at' => Carbon::now(),
+    ]);
+
+    $submission = Submission::find($submissionId);
+    $submission->update(['finish_status' => 'denied']);
+
+    return response()->json(["message" => "Submission denied"], 200);
+}
+
     
     private function getManagerForStaff($staffId)
     {

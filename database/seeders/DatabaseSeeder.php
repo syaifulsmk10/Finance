@@ -34,7 +34,7 @@ class DatabaseSeeder extends Seeder
 
 
         Role::create([
-            'name' => '	CEO',
+            'name' => 'CEO',
             'level' => 3
         ]);
         Role::create([

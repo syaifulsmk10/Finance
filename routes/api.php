@@ -72,20 +72,20 @@ Route::prefix('dataApplicant')->middleware('auth:sanctum')->group(function () {
     Route::get('/ammount', [AdminApprovalController::class, 'ammount']); //done
     Route::get('/dashboard', [AdminApprovalController::class, 'dashboard']); //done
     Route::post('/approve/{id}', [AdminApprovalController::class, 'approve']);
-    // Route::get('/index', [AdminApprovalController::class, 'index']);
-    // Route::get('/detail', [AdminApprovalController::class, 'detail']);
+    Route::post('/denied/{id}', [AdminApprovalController::class, 'denied']);
+    Route::get('/detail/{id}', [AdminApprovalController::class, 'detail']);
 });
 
 
 
 Route::prefix('submission')->middleware('auth:sanctum')->group(function () {
     Route::get('/index', [SubmissionController::class, 'index']);
+    Route::get('/update/{id}', [SubmissionController::class, 'update']);
+    Route::get('/detail/{id}', [SubmissionController::class, 'detail']);
     Route::post('/submissions', [SubmissionController::class, 'store']);
     Route::get('/banks', [BankController::class, 'index']);
     Route::get('/bank-account-detail/{bankId}', [BankAccountController::class, 'getBankAccountDetail']);
-    // Route::get('/show/{id}', [SubmissionController::class, 'show']);
-    // Route::get('/update/{id}', [SubmissionController::class, 'update']);
-    // Route::get('/delete{id}', [SubmissionController::class, 'delete']);
+    Route::post('/update/profiles/{id}', [UserController::class, 'updateprofiles']); //done
 });
 
 
