@@ -13,7 +13,6 @@ class BankAccountController extends Controller
         $user = Auth::user();
         $bankAccounts = $user->bankAccounts;
 
-        // Mengambil akun bank berdasarkan user dan bank_id
         $bankAccount = $bankAccounts->where('bank_id', $bankId)->first();
 
         if ($bankAccount) {

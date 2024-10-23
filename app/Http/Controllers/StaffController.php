@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Role;
 use App\Models\Staff;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class StaffController extends Controller
@@ -13,6 +15,16 @@ class StaffController extends Controller
     public function index()
     {
         //
+    }
+
+
+    public function manager(){
+        $Role = Role::with('users')->where('name', 'manager')->get();
+        
+        return response()->json([
+            'data' => $Role
+        ]);
+        
     }
 
     /**

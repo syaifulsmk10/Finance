@@ -6,6 +6,7 @@ use App\Http\Controllers\PositionController;
 use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\BankController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\StaffController;
 use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
@@ -56,6 +57,15 @@ Route::prefix('department')->middleware('auth:sanctum')->group(function () {
     Route::delete('/{id}', [DepartmentController::class, 'destroy']); //done
 });
 
+Route::prefix('bank')->middleware('auth:sanctum')->group(function () {
+    Route::get('/bank', [BankController::class, 'bank']); //done
+    Route::post('/bank', [BankController::class, 'store']); //done
+    Route::get('bank/{id}', [BankController::class, 'show']); //done
+    Route::post('bank/{id}', [BankController::class, 'update']); //done
+    Route::delete('bank/{id}', [BankController::class, 'destroy']); //done
+
+});
+
 
 
 Route::prefix('users')->middleware('auth:sanctum')->group(function () {
@@ -68,24 +78,42 @@ Route::prefix('users')->middleware('auth:sanctum')->group(function () {
 
 
 Route::prefix('dataApplicant')->middleware('auth:sanctum')->group(function () {
-    Route::get('/index', [AdminApprovalController::class, 'index']);
+    Route::get('/index', [AdminApprovalController::class, 'index']); //done
     Route::get('/ammount', [AdminApprovalController::class, 'ammount']); //done
     Route::get('/dashboard', [AdminApprovalController::class, 'dashboard']); //done
-    Route::post('/approve/{id}', [AdminApprovalController::class, 'approve']);
-    Route::post('/denied/{id}', [AdminApprovalController::class, 'denied']);
-    Route::get('/detail/{id}', [AdminApprovalController::class, 'detail']);
+    Route::post('/approve/{id}', [AdminApprovalController::class, 'approve']); //done
+    Route::post('/denied/{id}', [AdminApprovalController::class, 'denied']); //done
+    Route::get('/detail/{id}', [AdminApprovalController::class, 'detail']); //done
 });
 
 
 
 Route::prefix('submission')->middleware('auth:sanctum')->group(function () {
-    Route::get('/index', [SubmissionController::class, 'index']);
-    Route::get('/update/{id}', [SubmissionController::class, 'update']);
-    Route::get('/detail/{id}', [SubmissionController::class, 'detail']);
-    Route::post('/submissions', [SubmissionController::class, 'store']);
-    Route::get('/banks', [BankController::class, 'index']);
-    Route::get('/bank-account-detail/{bankId}', [BankAccountController::class, 'getBankAccountDetail']);
-    Route::post('/update/profiles/{id}', [UserController::class, 'updateprofiles']); //done
+    Route::get('/index', [SubmissionController::class, 'index']); //done
+    Route::post('/update/{id}', [SubmissionController::class, 'update']); //done
+    Route::get('/detail/{id}', [SubmissionController::class, 'detail']);  //done
+    Route::post('/submissions', [SubmissionController::class, 'store']); //done
+    Route::get('/banks', [BankController::class, 'index']); //done
+    Route::get('/bank-account-detail/{bankId}', [BankAccountController::class, 'getBankAccountDetail']); //done
+    Route::post('/update/profiles/{id}', [UserController::class, 'updateprofiles']); //pending
+    Route::post('/create/profiles/{id}', [UserController::class, 'updateprofiles']); //pending
 });
+
+
+Route::prefix('manager')->middleware('auth:sanctum')->group(function () {
+    Route::get('/manager', [StaffController::class, 'manager']); //done
+});
+
+
+
+
+
+
+
+
+
+
+
+
 
 
