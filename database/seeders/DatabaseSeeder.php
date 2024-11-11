@@ -52,10 +52,10 @@ class DatabaseSeeder extends Seeder
         Role::create([
             'name' => 'Employee'
         ]);
+        Position::create(['name' => 'Finance']);
         Position::create(['name' => 'CEO']);
         Position::create(['name' => 'Manager']);
-        Position::create(['name' => 'Staff']);
-        Position::create(['name' => 'Finance Officer']);
+        Position::create(['name' => 'GA']);
         Position::create(['name' => 'Programmer']);
         Position::create(['name' => 'IT Support']);
         Department::create(['name' => 'IT Software']);
@@ -64,7 +64,7 @@ class DatabaseSeeder extends Seeder
         Department::create(['name' => 'Marchine leraning']);
         User::create([
             'role_id' => 1, 
-            'position_id' => 1, 
+            'position_id' => 2, 
             'name' => ' Pak Megandi',
             'username' => 'Pak Megandi',
             'email' => 'Intiva@gmail.com',
@@ -74,7 +74,7 @@ class DatabaseSeeder extends Seeder
         ]);
         User::create([
             'role_id' => 2, 
-            'position_id' => 2, 
+            'position_id' => 3, 
             'department_id' => 1,
             'name' => ' Pak Elfin',
             'username' => 'Pak Elfin',
@@ -84,7 +84,7 @@ class DatabaseSeeder extends Seeder
         ]);
         User::create([
             'role_id' => 2, 
-            'position_id' => 2, 
+            'position_id' => 3, 
             'department_id' => 2,
             'name' => ' Pak Fatan',
             'username' => 'Pak Fatan',
@@ -94,7 +94,7 @@ class DatabaseSeeder extends Seeder
         ]);
         User::create([
             'role_id' => 2, 
-            'position_id' => 2, 
+            'position_id' => 3, 
             'department_id' => 3,
             'name' => ' Pak Sahrul',
             'username' => 'Pak Sahrul',
@@ -104,7 +104,7 @@ class DatabaseSeeder extends Seeder
         ]);
         User::create([
             'role_id' => 2, 
-            'position_id' => 2, 
+            'position_id' => 3, 
             'department_id' => 4,
             'name' => ' Pak Adhyit',
             'username' => 'Pak Adhyit',
@@ -115,7 +115,7 @@ class DatabaseSeeder extends Seeder
 
         User::create([
             'role_id' => 3, 
-            'position_id' => 3, 
+            'position_id' => 4, 
             'name' => ' Pak Edwin',
             'username' => 'Pak Edwin',
             'email' => 'Intiva5@gmail.com',
@@ -125,7 +125,7 @@ class DatabaseSeeder extends Seeder
 
         User::create([
             'role_id' => 4, 
-            'position_id' => 4, 
+            'position_id' => 1, 
             'name' => 'Mbak Ismi',
             'username' => 'Mbak Ismi',
             'email' => 'Intiva6@gmail.com',
@@ -154,6 +154,53 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('aselole123'),
 
         ]);
+
+        User::create([
+            'role_id' => 5, 
+            'position_id' => 1, 
+            'department_id' => 2,
+            'name' => 'MbaIsmi',
+            'username' => 'Mbakismi',
+            'email' => 'Intiva9@gmail.com',
+            'password' => Hash::make('aselole123'),
+
+        ]);
+
+        User::create([
+            'role_id' => 5, 
+            'position_id' => 2, 
+            'department_id' => 2,
+            'name' => 'Pak Gandi',
+            'username' => 'Pak Gandii',
+            'email' => 'Intiva10@gmail.com',
+            'password' => Hash::make('aselole123'),
+
+        ]);
+
+        User::create([
+            'role_id' => 5, 
+            'position_id' => 3, 
+            'department_id' => 2,
+            'name' => 'Pak elfin',
+            'username' => 'Pak elfinn',
+            'email' => 'Intiva11@gmail.com',
+            'password' => Hash::make('aselole123'),
+
+        ]);
+
+        User::create([
+            'role_id' => 5, 
+            'position_id' => 4, 
+            'department_id' => 2,
+            'name' => 'Pak edwin',
+            'username' => 'Pak edwinn',
+            'email' => 'Intiva12@gmail.com',
+            'password' => Hash::make('aselole123'),
+
+        ]);
+
+
+
         Bank::create(['name' => 'BCA']);
         Bank::create(['name' => 'Mandiri']);
         Bank::create(['name' => 'CIMB Niaga']);

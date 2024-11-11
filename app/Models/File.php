@@ -9,7 +9,7 @@ class File extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['submission_id', 'file'];
+    protected $fillable = ['submission_id', 'file', 'type'];
 
     public function submission()
     {

@@ -18,14 +18,17 @@ class StaffController extends Controller
     }
 
 
-    public function manager(){
-        $Role = Role::with('users')->where('name', 'manager')->get();
-        
-        return response()->json([
-            'data' => $Role
-        ]);
-        
-    }
+    public function manager()
+{
+    $managers = User::whereHas('role', function ($query) {
+        $query->where('name', 'manager');
+    })->get();
+    
+    return response()->json([
+        'data' => $managers
+    ]);
+}
+
 
     /**
      * Show the form for creating a new resource.

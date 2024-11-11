@@ -103,7 +103,7 @@ class UserController extends Controller
 
 
     $query = User::with(['role', 'position', 'bankAccounts', 'bankAccounts.bank', 'department', 'staff.manager', 'staff.staffMember']);
-
+         
 
     if ($search) {
         $query->where(function ($q) use ($search) {

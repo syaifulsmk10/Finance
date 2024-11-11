@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('files', function (Blueprint $table) {
             $table->id();
             $table->foreignId('submission_id')->constrained('submissions')->onDelete('cascade');
+            $table->string('type');
             $table->string('file');
             $table->timestamps();
         });

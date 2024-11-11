@@ -24,5 +24,7 @@ class BankAccountController extends Controller
         } else {
             return response()->json(['message' => 'Bank account not found'], 404);
         }
+
+        
     }
 }
