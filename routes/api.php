@@ -86,6 +86,8 @@ Route::prefix('dataApplicant')->middleware('auth:sanctum')->group(function () {
     Route::post('/approve/{id}', [AdminApprovalController::class, 'approve']); //done
     Route::post('/denied/{id}', [AdminApprovalController::class, 'denied']); //done
     Route::get('/detail/{id}', [AdminApprovalController::class, 'detail']); //done
+    Route::post('/deniedall', [AdminApprovalController::class, 'deniedall']);
+    Route::post('/approveall', [AdminApprovalController::class, 'approveall']);
 });
 
 
@@ -97,8 +99,10 @@ Route::prefix('submission')->middleware('auth:sanctum')->group(function () {
     Route::post('/submissions', [SubmissionController::class, 'store']); //done
     Route::get('/banks', [BankController::class, 'index']); //done
     Route::get('/bank-account-detail/{bankId}', [BankAccountController::class, 'getBankAccountDetail']); //done
-    Route::post('/update/profiles/{id}', [UserController::class, 'updateprofiles']); //pending
-    Route::post('/create/profiles/{id}', [UserController::class, 'updateprofiles']); //pending
+    Route::post('/update/profiles', [UserController::class, 'updateprofiles']); //pending
+    Route::post('/update/profiles/admin', [UserController::class, 'updateprofilesadmin']); //pending
+    Route::get('/profile', [UserController::class, 'getProfile']);
+    Route::get('/profile', [UserController::class, 'getProfileadmin']);
 });
 
 

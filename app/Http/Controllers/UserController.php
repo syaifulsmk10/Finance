@@ -367,4 +367,89 @@ public function updateprofiles(Request $request){
 }
 
 
+
+
+public function updateprofilesadmin(Request $request){
+    $user = User::where('id', Auth::user()->id)->first();
+
+    if ($request->has('position_id')) {
+        $user->position_id = $request->position_id;
+    }
+    if ($request->has('department_id')) {
+        $user->department_id = $request->department_id;
+    }
+    if ($request->has('name')) {
+        $user->name = $request->name;
+    }
+    if ($request->has('username')) {
+        $user->username = $request->username;
+    }
+    if ($request->has('email')) {
+        $user->email = $request->email;
+    }
+    if ($request->has('password')) {
+        $user->password = Hash::make($request->password);
+    }
+
+    if ($request->hasFile('path')) {
+        $image = $request->file('path');
+        $imageName = 'VA' . Str::random(40) . '.' . $image->getClientOriginalName();
+        $image->move(public_path('uploads/profiles'), $imageName);
+        $user->path = $imageName;
+    }
+
+    $user->save();
+
+
+   
+
+
+    return response()->json([
+        'message' => 'update profile successfully'
+    ]);
+
+
+}
+
+
+public function getProfileadmin()
+{
+    // Mengambil data pengguna yang sedang login
+    $user = Auth::user();
+
+    // Memuat relasi 'position' dan 'department' jika dibutuhkan
+    $user->load('position', 'department');
+
+    // Membuat URL gambar profil jika ada
+    $imageUrl = $user->path ? url('uploads/profiles/' . $user->path) : null;
+
+    return response()->json([
+        'user' => $user,
+        'profile_image_url' => $imageUrl
+    ]);
+}
+
+public function getProfile()
+{
+    // Mengambil data pengguna yang sedang login
+    $user = Auth::user();
+
+    // Memuat relasi 'position', 'department', dan 'bankAccounts'
+    $user->load('position', 'department', 'bankAccounts.bank');
+
+    // Membuat URL gambar profil jika ada
+    $imageUrl = $user->path ? asset('uploads/profiles/' . $user->path) : null;
+
+    return response()->json([
+        'user' => $user,
+        'profile_image_url' => $imageUrl
+    ]);
+}
+
+
+
+
+
+
+
 }

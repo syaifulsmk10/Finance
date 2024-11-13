@@ -49,21 +49,32 @@ class SubmissionController extends Controller
         // Tambahkan URL lengkap untuk setiap file
         $submissions->getCollection()->transform(function ($submission) {
             $submission->files->transform(function ($file) {
-                // Pastikan file adalah array dengan memaksa decode JSON
                 $fileArray = json_decode($file->file, true);
                 
+                // Buat dua array untuk memisahkan image dan pdf
+                $imageUrls = [];
+                $pdfUrls = [];
+                
                 if (is_array($fileArray)) {
-                    // Buat array file_url jika file berbentuk array
-                    $file->file_urls = collect($fileArray)->map(function ($fileName) {
-                        return url('uploads/submission/' . $fileName);
-                    })->toArray();
-                } else {
-                    // Jika file adalah string, tambahkan file_url tunggal
-                    $file->file_url = url('uploads/submission/' . $file->file);
+                    foreach ($fileArray as $fileName) {
+                        $fileUrl = url('uploads/submission/' . $fileName);
+                
+                        // Pisahkan berdasarkan tipe file
+                        if ($file->type === 'image') {
+                            $imageUrls[] = $fileUrl;
+                        } elseif ($file->type === 'pdf') {
+                            $pdfUrls[] = $fileUrl;
+                        }
+                    }
                 }
-    
+                
+                // Menggunakan setAttribute untuk menyimpan data ke properti dinamis jika diperlukan
+                $file->image_urls = $imageUrls;
+                $file->pdf_urls = $pdfUrls;
+            
                 return $file;
             });
+            
             return $submission;
         });
     
@@ -76,7 +87,7 @@ class SubmissionController extends Controller
 
 
     public function detail($id) {
-        $submission = Submission::with('adminApprovals', 'files', 'items', 'bankAccount.bank')
+        $submission = Submission::with('adminApprovals.user.role', 'files', 'items', 'bankAccount.bank')
             ->where('user_id', Auth::user()->id)
             ->find($id);
     
@@ -86,21 +97,32 @@ class SubmissionController extends Controller
     
         // Tambahkan URL lengkap untuk setiap file
         $submission->files->transform(function ($file) {
-            // Decode JSON jika file dalam bentuk array JSON string
             $fileArray = json_decode($file->file, true);
-    
+            
+            // Buat dua array untuk memisahkan image dan pdf
+            $imageUrls = [];
+            $pdfUrls = [];
+            
             if (is_array($fileArray)) {
-                // Jika file berbentuk array, buat daftar URL
-                $file->file_urls = collect($fileArray)->map(function ($fileName) {
-                    return url('uploads/submission/' . $fileName);
-                })->toArray();
-            } else {
-                // Jika file adalah string tunggal, tambahkan satu URL
-                $file->file_url = url('uploads/submission/' . $file->file);
+                foreach ($fileArray as $fileName) {
+                    $fileUrl = url('uploads/submission/' . $fileName);
+            
+                    // Pisahkan berdasarkan tipe file
+                    if ($file->type === 'image') {
+                        $imageUrls[] = $fileUrl;
+                    } elseif ($file->type === 'pdf') {
+                        $pdfUrls[] = $fileUrl;
+                    }
+                }
             }
-    
+            
+            // Menggunakan setAttribute untuk menyimpan data ke properti dinamis jika diperlukan
+            $file->image_urls = $imageUrls;
+            $file->pdf_urls = $pdfUrls;
+        
             return $file;
         });
+        
     
         return response()->json([
             'data' => $submission
@@ -162,22 +184,38 @@ class SubmissionController extends Controller
     // Simpan file jika ada
     if ($request->hasFile('file')) {
         $images = $request->file('file');
-        $imagefiles = [];
+        $imageFiles = [];
+        $pdfFiles = [];
 
         foreach ($images as $image) {
             $imageName = 'VA' . Str::random(40) . '.' . $image->getClientOriginalExtension();
             $image->move(public_path('uploads/submission'), $imageName);
-            $imagefiles[] = $imageName;
+
+            // Pisahkan berdasarkan tipe file
+            if (in_array($image->getClientOriginalExtension(), ['jpg', 'jpeg', 'png', 'gif'])) {
+                $imageFiles[] = $imageName;
+            } elseif ($image->getClientOriginalExtension() === 'pdf') {
+                $pdfFiles[] = $imageName;
+            }
         }
 
-        $type = in_array($image->getClientOriginalExtension(), ['jpg', 'jpeg', 'png', 'gif']) ? 'image' : 'pdf';
+        // Simpan data file gambar ke tabel File jika ada
+        if (!empty($imageFiles)) {
+            File::create([
+                'submission_id' => $submission->id,
+                'file' => json_encode($imageFiles),
+                'type' => 'image'
+            ]);
+        }
 
-        // Simpan data file ke tabel File
-        File::create([
-            'submission_id' => $submission->id,
-            'file' => json_encode($imagefiles), 
-            'type' =>  $type
-        ]);
+        // Simpan data file PDF ke tabel File jika ada
+        if (!empty($pdfFiles)) {
+            File::create([
+                'submission_id' => $submission->id,
+                'file' => json_encode($pdfFiles),
+                'type' => 'pdf'
+            ]);
+        }
     }
 
     // Logika persetujuan AdminApproval berdasarkan posisi
@@ -256,83 +294,156 @@ public function update(Request $request, $id)
         'submission_item.*.price' => 'sometimes|numeric|min:0',
         'file' => 'sometimes|array',
         'file.*' => 'sometimes|file|mimes:jpg,jpeg,png,pdf|max:2048',
-        'bank_account_id' => 'sometimes|integer|exists:bank_accounts,id',  // Validasi untuk bank_account_id
+        'bank_account_id' => 'sometimes|integer|exists:bank_accounts,id',
     ]);
 
     if ($validator->fails()) {
         return response()->json($validator->errors(), 422);
     }
 
-    // Update data submission
+    // Update submission details
     $submission->fill($request->only(['type', 'purpose', 'due_date', 'bank_account_id']));
     $totalAmount = $submission->amount;
 
-    // Update submission items jika ada
-    if ($request->has('submission_item')) {
-        $totalAmount = 0;
-        SubmissionItem::where('submission_id', $submission->id)->delete();
+    // Handle submission items (update or add new items)
+    // Handle submission items (update or add new items)
+// Handle submission items (update or add new items)
+// Handle submission items (update or add new items)
+if ($request->has('submission_item') && is_array($request->submission_item)) {
+    $totalAmount = 0;
 
-        foreach ($request->submission_item as $item) {
-            SubmissionItem::create([
+    // Ambil semua submission items lama
+    $existingItems = SubmissionItem::where('submission_id', $submission->id)->get();
+
+    // Daftar ID item yang akan tetap ada
+    $existingItemIds = [];
+
+    // Loop untuk setiap item baru dalam request
+    foreach ($request->submission_item as $item) {
+        // Cek apakah item sudah ada berdasarkan deskripsi atau identifier lainnya
+        $existingItem = $existingItems->firstWhere('description', $item['description']); // Sesuaikan dengan identifier unik
+
+        if ($existingItem) {
+            // Update item yang sudah ada
+            $existingItem->quantity = $item['quantity'];
+            $existingItem->price = $item['price'];
+            $existingItem->save();
+
+            // Tambahkan ID item yang diperbarui ke daftar
+            $existingItemIds[] = $existingItem->id;
+        } else {
+            // Tambah item baru jika tidak ditemukan
+            $newItem = SubmissionItem::create([
                 'submission_id' => $submission->id,
                 'description' => $item['description'],
                 'quantity' => $item['quantity'],
                 'price' => $item['price'],
             ]);
-            $totalAmount += $item['quantity'] * $item['price'];
+
+            // Tambahkan ID item yang baru ditambahkan ke daftar
+            $existingItemIds[] = $newItem->id;
         }
 
-        $submission->amount = $totalAmount;
+        // Hitung total amount
+        $totalAmount += $item['quantity'] * $item['price'];
     }
 
-    $submission->save();
+    // Hapus item yang tidak ada dalam request (menghapus item yang tidak ada di request)
+    // Yang tidak ada di request (id-nya tidak ada di dalam existingItemIds)
+    $itemsToDelete = $existingItems->whereNotIn('id', $existingItemIds);
+    foreach ($itemsToDelete as $item) {
+        $item->delete();
+    }
 
-    // Update atau tambahkan file jika ada
-   
-    if ($request->has('file')) {
-        $files = json_decode($request->input('file'));
-        $imageFiles = [];
-        $pdfFile = null;
-    
-        foreach ($files as $file) {
-            // Mendapatkan ekstensi file
-            $extension = pathinfo($file, PATHINFO_EXTENSION);
-    
-            if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif'])) {
-                // Proses file gambar, masukkan ke array imageFiles
-                $imageFiles[] = $file;
-            } elseif ($extension === 'pdf') {
-                // Proses file PDF, hanya satu file PDF yang bisa diterima
-                $pdfFile = $file;
-            }
+    // Update total amount pada submission
+    $submission->amount = $totalAmount;
+} else {
+    // Handle jika tidak ada atau format submission_item tidak valid
+    return response()->json([
+        'message' => 'Invalid submission items data'
+    ], 422);
+}
+
+$submission->save();
+
+if ($request->hasFile('file')) {
+    $images = $request->file('file');
+    $imageFiles = [];
+    $pdfFiles = [];
+
+    foreach ($images as $image) {
+        $imageName = 'VA' . Str::random(40) . '.' . $image->getClientOriginalExtension();
+        $image->move(public_path('uploads/submission'), $imageName);
+
+        // Pisahkan berdasarkan tipe file
+        if (in_array($image->getClientOriginalExtension(), ['jpg', 'jpeg', 'png', 'gif'])) {
+            $imageFiles[] = $imageName;
+        } elseif ($image->getClientOriginalExtension() === 'pdf') {
+            $pdfFiles[] = $imageName;
         }
-    
-        // Tentukan tipe file berdasarkan file yang ditemukan
-        if (!empty($imageFiles) && !empty($pdfFile)) {
-            $type = 'report'; // Gambar dan PDF
-        } elseif (!empty($imageFiles)) {
-            $type = 'image'; // Hanya gambar
-        } elseif (!empty($pdfFile)) {
-            $type = 'pdf'; // Hanya PDF
-        } else {
-            $type = null;
-        }
-    
-        // Simpan data file ke tabel File
+    }
+
+    // Simpan data file gambar ke tabel File jika ada
+    if (!empty($imageFiles)) {
         File::create([
             'submission_id' => $submission->id,
-            'file' => json_encode([
-                'images' => $imageFiles,
-                'pdf' => $pdfFile
-            ]), 
-            'type' =>  $type
+            'file' => json_encode($imageFiles),
+            'type' => 'image'
         ]);
     }
-    
 
-    return response()->json([
-        "message" => "Submission updated successfully",
-    ], 200);
+    // Simpan data file PDF ke tabel File jika ada
+    if (!empty($pdfFiles)) {
+        File::create([
+            'submission_id' => $submission->id,
+            'file' => json_encode($pdfFiles),
+            'type' => 'pdf'
+        ]);
+    }
+}
+
+    // Handle file uploads (jika diperlukan, sesuaikan dengan logika upload file Anda)
+
+    // Handle admin approval (similar to store)
+    $user = Auth::user();
+    $positionName = $user->position->name;
+
+    // Check if approval is needed for admin
+    if ($positionName !== 'Finance') {
+        $approvalData = [
+            'submission_id' => $submission->id,
+            'status' => 'pending',
+        ];
+
+        // Set appropriate admin user for approval based on position
+        switch ($positionName) {
+            case 'GA':
+                $approvalData['user_id'] = 5;
+                break;
+            case 'Manager':
+                $approvalData['user_id'] = 1;
+                break;
+            case 'CEO':
+                $approvalData['user_id'] = 7;
+                break;
+            default:
+                $approvalData['user_id'] = 6;
+                break;
+        }
+
+        // Create the admin approval
+        AdminApproval::create($approvalData);
+    } else {
+        // If position is Finance, approve immediately
+        AdminApproval::create([
+            'user_id' => $user->id,
+            'submission_id' => $submission->id,
+            'status' => 'approved',
+            'approved_at' => now(),
+        ]);
+    }
+
+    return response()->json(["message" => "Submission updated successfully"], 200);
 }
 
 
