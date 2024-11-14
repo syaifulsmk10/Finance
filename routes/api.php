@@ -102,7 +102,7 @@ Route::prefix('submission')->middleware('auth:sanctum')->group(function () {
     Route::post('/update/profiles', [UserController::class, 'updateprofiles']); //pending
     Route::post('/update/profiles/admin', [UserController::class, 'updateprofilesadmin']); //pending
     Route::get('/profile', [UserController::class, 'getProfile']);
-    Route::get('/profile', [UserController::class, 'getProfileadmin']);
+    Route::get('/profiles/admin', [UserController::class, 'getProfileadmin']);
 });
 
 

@@ -551,9 +551,9 @@ class AdminApprovalController extends Controller
     {
         $user = Auth::user();
     
-        // Mengambil semua approval yang belum disetujui
+        // Mengambil semua approval yang belum disetujui atau belum ditolak
         $approvals = AdminApproval::where('user_id', $user->id)
-            ->where('status', '!=', 'approved')
+            ->whereNotIn('status', ['approved', 'denied'])
             ->get();
     
         // Mengecek apakah tidak ada approval yang perlu ditolak
@@ -576,7 +576,7 @@ class AdminApprovalController extends Controller
         // Proses setiap submission untuk memastikan semua approval terkait ditolak
         foreach ($submissionIds as $submissionId) {
             $submission = Submission::find($submissionId);
-            
+    
             // Pastikan submission ditemukan
             if ($submission) {
                 // Ambil semua approval terkait dengan submission ini
@@ -592,8 +592,10 @@ class AdminApprovalController extends Controller
             }
         }
     
-        return response()->json(["message" => "Semua submission terkait telah ditolak"], 200);
+        return response()->json(["message" => "Semua submission terkait telah ditolak dan finish_status diperbarui jika perlu"], 200);
     }
+    
+
     
     
 

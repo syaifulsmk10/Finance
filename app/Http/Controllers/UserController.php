@@ -264,16 +264,41 @@ public function update(Request $request, $id)
     $user->save();
 
     if ($request->has('bank')) {
-        BankAccount::where('user_id', $user->id)->delete();
+        $bankIdsToKeep = [];
 
         foreach ($request->bank as $bankData) {
-            BankAccount::create([
-                'user_id' => $user->id,
-                'bank_id' => $bankData['bank_id'],
-                'account_name' => $bankData['account_name'],
-                'account_number' => $bankData['account_number']
-            ]);
+            if (isset($bankData['id'])) {
+                // Update existing bank account fields that are present in the request
+                $bankAccount = BankAccount::where('user_id', $user->id)
+                    ->where('id', $bankData['id'])
+                    ->first();
+
+                if ($bankAccount) {
+                    // Update only fields that are included in the request
+                    $bankAccount->update(array_filter([
+                        'bank_id' => $bankData['bank_id'] ?? null,
+                        'account_name' => $bankData['account_name'] ?? null,
+                        'account_number' => $bankData['account_number'] ?? null,
+                    ]));
+
+                    $bankIdsToKeep[] = $bankAccount->id;
+                }
+            } else {
+                // Add new bank account
+                $newBankAccount = BankAccount::create([
+                    'user_id' => $user->id,
+                    'bank_id' => $bankData['bank_id'],
+                    'account_name' => $bankData['account_name'],
+                    'account_number' => $bankData['account_number']
+                ]);
+                $bankIdsToKeep[] = $newBankAccount->id;
+            }
         }
+
+        // Delete bank accounts that are not in the current request
+        BankAccount::where('user_id', $user->id)
+            ->whereNotIn('id', $bankIdsToKeep)
+            ->delete();
     }
 
     $staff = Staff::where('staff_id', $user->id)->first();
@@ -311,17 +336,10 @@ public function destroy($id)
 }
 
 
-
-
-public function updateprofiles(Request $request){
+public function updateprofiles(Request $request)
+{
     $user = User::where('id', Auth::user()->id)->first();
 
-    if ($request->has('position_id')) {
-        $user->position_id = $request->position_id;
-    }
-    if ($request->has('department_id')) {
-        $user->department_id = $request->department_id;
-    }
     if ($request->has('name')) {
         $user->name = $request->name;
     }
@@ -344,26 +362,48 @@ public function updateprofiles(Request $request){
 
     $user->save();
 
-
+    // Update bank accounts
     if ($request->has('bank')) {
-        BankAccount::where('user_id', $user->id)->delete();
+        $bankIdsToKeep = [];
 
         foreach ($request->bank as $bankData) {
-            BankAccount::create([
-                'user_id' => $user->id,
-                'bank_id' => $bankData['bank_id'],
-                'account_name' => $bankData['account_name'],
-                'account_number' => $bankData['account_number']
-            ]);
-        }
-    }
+            if (isset($bankData['id'])) {
+                // Update existing bank account fields that are present in the request
+                $bankAccount = BankAccount::where('user_id', $user->id)
+                    ->where('id', $bankData['id'])
+                    ->first();
 
+                if ($bankAccount) {
+                    // Update only fields that are included in the request
+                    $bankAccount->update(array_filter([
+                        'bank_id' => $bankData['bank_id'] ?? null,
+                        'account_name' => $bankData['account_name'] ?? null,
+                        'account_number' => $bankData['account_number'] ?? null,
+                    ]));
+
+                    $bankIdsToKeep[] = $bankAccount->id;
+                }
+            } else {
+                // Add new bank account
+                $newBankAccount = BankAccount::create([
+                    'user_id' => $user->id,
+                    'bank_id' => $bankData['bank_id'],
+                    'account_name' => $bankData['account_name'],
+                    'account_number' => $bankData['account_number']
+                ]);
+                $bankIdsToKeep[] = $newBankAccount->id;
+            }
+        }
+
+        // Delete bank accounts that are not in the current request
+        BankAccount::where('user_id', $user->id)
+            ->whereNotIn('id', $bankIdsToKeep)
+            ->delete();
+    }
 
     return response()->json([
         'message' => 'update profile successfully'
     ]);
-
-
 }
 
 
@@ -372,12 +412,6 @@ public function updateprofiles(Request $request){
 public function updateprofilesadmin(Request $request){
     $user = User::where('id', Auth::user()->id)->first();
 
-    if ($request->has('position_id')) {
-        $user->position_id = $request->position_id;
-    }
-    if ($request->has('department_id')) {
-        $user->department_id = $request->department_id;
-    }
     if ($request->has('name')) {
         $user->name = $request->name;
     }
@@ -438,7 +472,7 @@ public function getProfile()
     $user->load('position', 'department', 'bankAccounts.bank');
 
     // Membuat URL gambar profil jika ada
-    $imageUrl = $user->path ? asset('uploads/profiles/' . $user->path) : null;
+    $imageUrl = $user->path ? url('uploads/profiles/' . $user->path) : null;
 
     return response()->json([
         'user' => $user,
