@@ -197,7 +197,7 @@ class SubmissionController extends Controller
                    return [
                        'id' => $proof->id,
                        'type' => $proof->type,
-                       'url' => url('uploads/proofs/' . $fileName),
+                       'url' => url('uploads/submission/' . $fileName),
                    ];
                }, $fileArray);
            }
