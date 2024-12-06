@@ -16,38 +16,43 @@ use Illuminate\Support\Str;
 class UserController extends Controller
 {
     public function postLogin(Request $request)
-    {
-        $validate = $request->validate([
-            "email" => 'required|email',
-            "password" => "required",
-        ]);
+{
+    $validate = $request->validate([
+        "email" => 'required|email',
+        "password" => "required",
+    ]);
 
-        if (!Auth::attempt($validate)) {
-            return response()->json([
-                'message' => 'Wrong email or password',
-                'data' => $validate
-            ], 404);
-        }
-
-
-        $user = Auth::user();
-        $token = $user->createToken('auth')->plainTextToken;
-        $userData = $user->toArray(); //
-
-        if ($user->role_id == 1) {
-            return response()->json([
-                'message' => 'Success Login Admin',
-                'data' => $userData,
-                'token' => $token
-            ], 200);
-        }
-
+    if (!Auth::attempt($validate)) {
         return response()->json([
-            'message' => 'Success Login User',
+            'message' => 'Wrong email or password',
+            'data' => $validate
+        ], 404);
+    }
+
+    $user = Auth::user();
+    $token = $user->createToken('auth')->plainTextToken;
+
+    // Convert user data to array and add full image URL
+    $userData = $user->toArray();
+    if ($user->path) {
+        $userData['path'] = url('uploads/profiles/' . $user->path);
+    }
+
+    if ($user->role_id == 1) {
+        return response()->json([
+            'message' => 'Success Login Admin',
             'data' => $userData,
             'token' => $token
         ], 200);
     }
+
+    return response()->json([
+        'message' => 'Success Login User',
+        'data' => $userData,
+        'token' => $token
+    ], 200);
+}
+
 
 
     public function registerUser(Request $request)
@@ -102,7 +107,7 @@ class UserController extends Controller
     $perPage = $request->input('per_page', 10); 
 
 
-    $query = User::with(['role', 'position', 'bankAccounts', 'bankAccounts.bank', 'department', 'staff.manager', 'staff.staffMember']);
+    $query = User::with(['role', 'position',  'department', 'staff.manager', 'staff.staffMember']);
          
 
     if ($search) {
@@ -115,13 +120,6 @@ class UserController extends Controller
                 })
                 ->orWhereHas('position', function ($q) use ($search) {  
                     $q->where('name', 'LIKE', "%{$search}%");
-                })
-                ->orWhereHas('bankAccounts', function ($q) use ($search) { 
-                    $q->where('account_name', 'LIKE', "%{$search}%") 
-                        ->orWhere('account_number', 'LIKE', "%{$search}%") 
-                        ->orWhereHas('bank', function ($q) use ($search) { 
-                            $q->where('name', 'LIKE', "%{$search}%");
-                        });
                 });
         });
     }
@@ -145,9 +143,6 @@ class UserController extends Controller
           'password' => 'required|min:6',
           'level' => 'sometimes|integer', 
           'path.*' => 'required|file|image|max:2048',
-          'bank.*.bank_id' => 'required|integer',  // validate nested bank_id
-          'bank.*.account_name' => 'required|string',
-          'bank.*.account_number' => 'required|string'
       ]);
   
       if ($validator->fails()) {
@@ -179,33 +174,31 @@ class UserController extends Controller
           'path' => $imagePath
       ]);
   
-      foreach ($request->bank as $bank) {
-          BankAccount::create([
-              'user_id' => $user->id,
-              'bank_id' => $bank['bank_id'], // Access bank_id from nested array
-              'account_name' => $bank['account_name'],
-              'account_number' => $bank['account_number']
-          ]);
-      }
   
       Staff::create([
           'manager_id' => $request->manager_id,
           'staff_id' => $user->id
       ]);
   
-      return response()->json(['message' => 'User created successfully'], 201);
+      return response()->json(['message' => 'User created successfully'], 201); 
   }
   
 
-    public function show($id)
-    {
-
-        $user = User::with(['role', 'position', 'bankAccounts', 'bankAccounts.bank', 'department', 'staff.manager',  'staff.staffMember'])->findOrFail($id);
-
-        return response()->json([
-            'data' => $user, 'message' => 'User retrieved successfully'
-        ]);
-    }
+  public function show($id)
+  {
+      $user = User::with(['role', 'position', 'department', 'staff.manager',  'staff.staffMember'])->findOrFail($id);
+  
+   
+      if ($user->path) {
+          $user->path = url('uploads/profiles/' . $user->path);
+      }
+  
+      return response()->json([
+          'data' => $user,
+          'message' => 'User retrieved successfully'
+      ]);
+  }
+  
 
 
 
@@ -220,9 +213,6 @@ public function update(Request $request, $id)
         'password' => 'sometimes|nullable|min:6',
         'level' => 'sometimes|integer',
         'path.*' => 'sometimes|file|image|max:2048',
-        'bank.*.bank_id' => 'sometimes|required',
-        'bank.*.account_name' => 'sometimes|required',
-        'bank.*.account_number' => 'sometimes|required',
         'manager_id' => 'sometimes|required'
     ]);
 
@@ -263,43 +253,6 @@ public function update(Request $request, $id)
 
     $user->save();
 
-    if ($request->has('bank')) {
-        $bankIdsToKeep = [];
-
-        foreach ($request->bank as $bankData) {
-            if (isset($bankData['id'])) {
-                // Update existing bank account fields that are present in the request
-                $bankAccount = BankAccount::where('user_id', $user->id)
-                    ->where('id', $bankData['id'])
-                    ->first();
-
-                if ($bankAccount) {
-                    // Update only fields that are included in the request
-                    $bankAccount->update(array_filter([
-                        'bank_id' => $bankData['bank_id'] ?? null,
-                        'account_name' => $bankData['account_name'] ?? null,
-                        'account_number' => $bankData['account_number'] ?? null,
-                    ]));
-
-                    $bankIdsToKeep[] = $bankAccount->id;
-                }
-            } else {
-                // Add new bank account
-                $newBankAccount = BankAccount::create([
-                    'user_id' => $user->id,
-                    'bank_id' => $bankData['bank_id'],
-                    'account_name' => $bankData['account_name'],
-                    'account_number' => $bankData['account_number']
-                ]);
-                $bankIdsToKeep[] = $newBankAccount->id;
-            }
-        }
-
-        // Delete bank accounts that are not in the current request
-        BankAccount::where('user_id', $user->id)
-            ->whereNotIn('id', $bankIdsToKeep)
-            ->delete();
-    }
 
     $staff = Staff::where('staff_id', $user->id)->first();
     
@@ -326,7 +279,6 @@ public function destroy($id)
         unlink(public_path('uploads/profiles/' . $user->path));
     }
 
-    BankAccount::where('user_id', $user->id)->delete();
 
     Staff::where('staff_id', $user->id)->delete();
 
@@ -338,8 +290,23 @@ public function destroy($id)
 
 public function updateprofiles(Request $request)
 {
+
+    $validator = Validator::make($request->all(), [
+       'name' => 'nullable|string|max:255',
+        'username' => 'nullable|string|max:255|unique:users,username,' . Auth::user()->id,
+        'email' => 'nullable|email|max:255|unique:users,email,' . Auth::user()->id,
+        'password' => 'nullable|string|min:8|confirmed',
+        'path' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json(['error' => $validator->errors()], 400);
+    }
+
+    // Ambil user berdasarkan ID
     $user = User::where('id', Auth::user()->id)->first();
 
+    // Update profil
     if ($request->has('name')) {
         $user->name = $request->name;
     }
@@ -355,61 +322,41 @@ public function updateprofiles(Request $request)
 
     if ($request->hasFile('path')) {
         $image = $request->file('path');
-        $imageName = 'VA' . Str::random(40) . '.' . $image->getClientOriginalName();
+        $imageName = 'VA' . Str::random(40) . '.' . $image->getClientOriginalExtension(); 
         $image->move(public_path('uploads/profiles'), $imageName);
         $user->path = $imageName;
     }
 
     $user->save();
 
-    // Update bank accounts
-    if ($request->has('bank')) {
-        $bankIdsToKeep = [];
-
-        foreach ($request->bank as $bankData) {
-            if (isset($bankData['id'])) {
-                // Update existing bank account fields that are present in the request
-                $bankAccount = BankAccount::where('user_id', $user->id)
-                    ->where('id', $bankData['id'])
-                    ->first();
-
-                if ($bankAccount) {
-                    // Update only fields that are included in the request
-                    $bankAccount->update(array_filter([
-                        'bank_id' => $bankData['bank_id'] ?? null,
-                        'account_name' => $bankData['account_name'] ?? null,
-                        'account_number' => $bankData['account_number'] ?? null,
-                    ]));
-
-                    $bankIdsToKeep[] = $bankAccount->id;
-                }
-            } else {
-                // Add new bank account
-                $newBankAccount = BankAccount::create([
-                    'user_id' => $user->id,
-                    'bank_id' => $bankData['bank_id'],
-                    'account_name' => $bankData['account_name'],
-                    'account_number' => $bankData['account_number']
-                ]);
-                $bankIdsToKeep[] = $newBankAccount->id;
-            }
-        }
-
-        // Delete bank accounts that are not in the current request
-        BankAccount::where('user_id', $user->id)
-            ->whereNotIn('id', $bankIdsToKeep)
-            ->delete();
-    }
 
     return response()->json([
-        'message' => 'update profile successfully'
+        'message' => 'Profile updated successfully'
     ]);
 }
+
+
 
 
 
 
 public function updateprofilesadmin(Request $request){
+
+    $validator = Validator::make($request->all(), [
+        'name' => 'nullable|string|max:255',
+        'username' => 'nullable|string|max:255|unique:users,username,' . Auth::user()->id,
+        'email' => 'nullable|email|max:255|unique:users,email,' . Auth::user()->id,
+        'password' => 'nullable|min:8|confirmed',
+        'path' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', 
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'message' => 'Validation failed',
+            'errors' => $validator->errors()
+        ], 422);
+    }
+
     $user = User::where('id', Auth::user()->id)->first();
 
     if ($request->has('name')) {
@@ -427,34 +374,24 @@ public function updateprofilesadmin(Request $request){
 
     if ($request->hasFile('path')) {
         $image = $request->file('path');
-        $imageName = 'VA' . Str::random(40) . '.' . $image->getClientOriginalName();
+        $imageName = 'VA' . Str::random(40) . '.' . $image->getClientOriginalExtension();
         $image->move(public_path('uploads/profiles'), $imageName);
         $user->path = $imageName;
     }
 
     $user->save();
 
-
-   
-
-
     return response()->json([
-        'message' => 'update profile successfully'
+        'message' => 'Profile updated successfully'
     ]);
-
-
 }
-
 
 public function getProfileadmin()
 {
-    // Mengambil data pengguna yang sedang login
     $user = Auth::user();
 
-    // Memuat relasi 'position' dan 'department' jika dibutuhkan
-    $user->load('position', 'department');
 
-    // Membuat URL gambar profil jika ada
+    $user->load('position', 'department');
     $imageUrl = $user->path ? url('uploads/profiles/' . $user->path) : null;
 
     return response()->json([
@@ -465,13 +402,8 @@ public function getProfileadmin()
 
 public function getProfile()
 {
-    // Mengambil data pengguna yang sedang login
     $user = Auth::user();
-
-    // Memuat relasi 'position', 'department', dan 'bankAccounts'
-    $user->load('position', 'department', 'bankAccounts.bank');
-
-    // Membuat URL gambar profil jika ada
+    $user->load('position', 'department');
     $imageUrl = $user->path ? url('uploads/profiles/' . $user->path) : null;
 
     return response()->json([

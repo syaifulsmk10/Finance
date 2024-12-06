@@ -17,7 +17,9 @@ class Submission extends Model
         'due_date',
         'finish_status',
         'amount',
-        'bank_account_id',
+        'bank_name',        // Nama bank
+        'account_name',     // Nama pemegang akun
+        'account_number',  
     ];
 
     public function user()
@@ -40,8 +42,5 @@ class Submission extends Model
         return $this->hasMany(SubmissionItem::class);
     }
 
-    public function bankAccount()
-    {
-        return $this->belongsTo(BankAccount::class, 'bank_account_id');
-    }
+  
 }

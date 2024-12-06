@@ -14,14 +14,16 @@ return new class extends Migration
         Schema::create('submissions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('bank_account_id')->constrained('bank_accounts')->onDelete('cascade'); 
-            $table->enum('type', ['Reimburesent', 'Payment Process']);
+            $table->string('bank_name'); // Bank name
+            $table->string('account_name'); // Account holder name
+            $table->bigInteger('account_number'); // Account number
+            $table->enum('type', ['Reimbursement', 'Payment Request']);
             $table->string('purpose');
             $table->dateTime('submission_date');
             $table->bigInteger('amount')->nullable();
             $table->dateTime('due_date');
             $table->text('description')->nullable();
-            $table->enum('finish_status', ['approved', 'denied', 'process'])->default('process');;
+            $table->enum('finish_status', ['approved', 'denied', 'process'])->default('process');
             $table->timestamps();
         });
     }

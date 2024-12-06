@@ -21,8 +21,10 @@ class StaffController extends Controller
     public function manager()
 {
     $managers = User::whereHas('role', function ($query) {
-        $query->where('name', 'manager');
+        $query->where('name', 'Manager');
     })->get();
+
+
     
     return response()->json([
         'data' => $managers

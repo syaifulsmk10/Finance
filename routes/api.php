@@ -59,14 +59,6 @@ Route::prefix('department')->middleware('auth:sanctum')->group(function () {
     Route::delete('/{id}', [DepartmentController::class, 'destroy']); //done
 });
 
-Route::prefix('bank')->middleware('auth:sanctum')->group(function () {
-    Route::get('/bank', [BankController::class, 'bank']); //done
-    Route::post('/bank', [BankController::class, 'store']); //done
-    Route::get('bank/{id}', [BankController::class, 'show']); //done
-    Route::post('bank/{id}', [BankController::class, 'update']); //done
-    Route::delete('bank/{id}', [BankController::class, 'destroy']); //done
-
-});
 
 
 
@@ -81,13 +73,15 @@ Route::prefix('users')->middleware('auth:sanctum')->group(function () {
 
 Route::prefix('dataApplicant')->middleware('auth:sanctum')->group(function () {
     Route::get('/index', [AdminApprovalController::class, 'index']); //done
-    Route::get('/ammount', [AdminApprovalController::class, 'ammount']); //done
+    Route::get('/ammount', [AdminApprovalController::class, 'amount']); //done
     Route::get('/dashboard', [AdminApprovalController::class, 'dashboard']); //done
     Route::post('/approve/{id}', [AdminApprovalController::class, 'approve']); //done
     Route::post('/denied/{id}', [AdminApprovalController::class, 'denied']); //done
     Route::get('/detail/{id}', [AdminApprovalController::class, 'detail']); //done
     Route::post('/deniedall', [AdminApprovalController::class, 'deniedall']);
     Route::post('/approveall', [AdminApprovalController::class, 'approveall']);
+    Route::post('/admin-approvals/{id}/check', [AdminApprovalController::class, 'checkDocument']);
+    Route::post('/proof/{id}', [AdminApprovalController::class, 'proof']);
 });
 
 
@@ -97,9 +91,8 @@ Route::prefix('submission')->middleware('auth:sanctum')->group(function () {
     Route::post('/update/{id}', [SubmissionController::class, 'update']); //done
     Route::get('/detail/{id}', [SubmissionController::class, 'detail']);  //done
     Route::post('/submissions', [SubmissionController::class, 'store']); //done
-    Route::get('/banks', [BankController::class, 'index']); //done
-    Route::get('/bank-account-detail/{bankId}', [BankAccountController::class, 'getBankAccountDetail']); //done
-    Route::post('/update/profiles', [UserController::class, 'updateprofiles']); //pending
+
+    Route::post('/update/profiles/user', [UserController::class, 'updateprofiles']); //pending
     Route::post('/update/profiles/admin', [UserController::class, 'updateprofilesadmin']); //pending
     Route::get('/profile', [UserController::class, 'getProfile']);
     Route::get('/profiles/admin', [UserController::class, 'getProfileadmin']);

@@ -17,6 +17,8 @@ return new class extends Migration
             $table->foreignId('submission_id')->constrained('submissions')->onDelete('cascade');
             $table->enum('status', ['approved', 'denied', 'pending'])->default('pending');
             $table->text('notes')->nullable();
+            $table->boolean('is_checked')->default(false); // Untuk ceklis dokumen fisik
+            $table->dateTime('checked_at')->nullable();
             $table->dateTime('approved_at')->nullable();
             $table->dateTime('deleted_at')->nullable();
             $table->timestamps();

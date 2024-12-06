@@ -20,4 +20,9 @@ class AdminApproval extends Model
     {
         return $this->belongsTo(Submission::class);
     }
+
+    public function transferProof()
+    {
+        return $this->hasOne(AdminTransferProof::class);
+    }
 }

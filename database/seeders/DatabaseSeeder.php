@@ -201,56 +201,7 @@ class DatabaseSeeder extends Seeder
 
 
 
-        Bank::create(['name' => 'BCA']);
-        Bank::create(['name' => 'Mandiri']);
-        Bank::create(['name' => 'CIMB Niaga']);
-        Bank::create(['name' => 'BRI']);
-        Bank::create(['name' => 'DKI']);
-        Bank::create(['name' => 'DKI']);
-        BankAccount::create([
-            'user_id' => 2,
-            'bank_id' => 1,
-            'account_name' => 'Elfin',
-            'account_number' => '1234567890'
-        ]);
-        BankAccount::create([
-            'user_id' => 2,
-            'bank_id' => 2,
-            'account_name' => 'Elfin',
-            'account_number' => '1234567890'
-        ]);
-        BankAccount::create([
-            'user_id' => 2,
-            'bank_id' => 3,
-            'account_name' => 'Elfin',
-            'account_number' => '1234567890'
-        ]);
-        BankAccount::create([
-            'user_id' => 8,
-            'bank_id' => 4,
-            'account_name' => 'Piko',
-            'account_number' => '1234567890'
-        ]);
-        BankAccount::create([
-            'user_id' => 8,
-            'bank_id' => 1,
-            'account_name' => 'Piko',
-            'account_number' => '1234567890'
-        ]);
-
-        BankAccount::create([
-            'user_id' => 9,
-            'bank_id' => 1,
-            'account_name' => 'Adam',
-            'account_number' => '1234567890'
-        ]);
-        BankAccount::create([
-            'user_id' => 9,
-            'bank_id' => 2,
-            'account_name' => 'Adam',
-            'account_number' => '1234567890'
-        ]);
-
+       
        Staff::create([
             'manager_id' => 2,
             'staff_id' => 9,
@@ -262,24 +213,28 @@ class DatabaseSeeder extends Seeder
 
         Submission::create([
             'user_id'  => 8,
-            'type' => 'Reimburesent',
+            'type' => 'Reimbursement',
             'purpose' => 'agskagskags',
             'submission_date' => Carbon::now(),
             'due_date' => Carbon::now(),
             'description' => 'kahjdgagdlj',
-            'bank_account_id' => 4,
+            'bank_name' => 'Bank A',                    // Nama Bank
+            'account_name' => 'John Doe',               // Nama Pemegang Rekening
+            'account_number' => '1234567890',   
             'finish_status' => 'process',
             'amount' => 200000,
         ]);
 
         Submission::create([
             'user_id'  => 9,
-            'type' => 'Reimburesent',
+            'type' => 'Reimbursement',
             'purpose' => 'agskagskags',
             'submission_date' => Carbon::now(),
             'due_date' => Carbon::now(),
             'description' => 'kahjdgagdlj',
-            'bank_account_id' => 7,
+            'bank_name' => 'Bank A',                    // Nama Bank
+            'account_name' => 'John Doe',               // Nama Pemegang Rekening
+            'account_number' => '1234567890',   
             'finish_status' => 'process',
             'amount' => 500000,
         ]);
