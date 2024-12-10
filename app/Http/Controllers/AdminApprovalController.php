@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+
    
 
 class AdminApprovalController extends Controller
@@ -721,69 +722,63 @@ public function detail($id)
     
 
 
-    public function deniedall(Request $request)
-    {
-        $user = Auth::user();
-        
-        // Get the selected IDs from the request
-        $selectedIds = $request->input('selected_ids', []);
-        
-        
-        if (empty($selectedIds)) {
-            return response()->json(['message' => 'Tidak ada pengajuan yang dipilih untuk disetujui'], 400);
-        }
-    
-        // Get only the pending approvals that match the selected IDs
+   
+            
+
+
+public function deniedall(Request $request)
+{
+    $user = Auth::user();
+
+    $validated = $request->validate([
+        'selected_ids' => 'required|array',
+        'selected_ids.*' => 'integer|exists:submissions,id',
+        'notes' => 'nullable|string',
+    ]);
+
+    $selectedIds = $validated['selected_ids'];
+    $notes = $validated['notes'] ?? null;
+
+    try {
+        // Update approvals
         $approvals = AdminApproval::whereIn('submission_id', $selectedIds)
             ->where('user_id', $user->id)
             ->where('status', 'pending')
             ->get();
 
-          
-        
-        if ($approvals->isEmpty()) {
-            return response()->json(['message' => 'Tidak ada pengajuan yang perlu disetujui untuk user ini'], 404);
-        }
-
-           
-    
         if ($approvals->isEmpty()) {
             return response()->json(['message' => 'Tidak ada approval yang perlu ditolak untuk user ini'], 404);
         }
-    
+
         foreach ($approvals as $approval) {
-            // Update status menjadi 'denied'
             $approval->update([
                 'status' => 'denied',
-                'notes' => $request->input('notes', null),
-                'denied_at' => Carbon::now(),
+                'notes' => $notes,
+                'denied_at' => now(),
             ]);
         }
-    
-        // Ambil ID submission yang terkait
-        $submissionIds = $approvals->pluck('submission_id')->unique();
-    
-        foreach ($submissionIds as $submissionId) {
-            $submission = Submission::find($submissionId);
-    
-            if ($submission) {
-                // Cek apakah ada approvals terkait yang sudah ditolak
-                $relatedApprovals = AdminApproval::where('submission_id', $submissionId)->get();
-    
-                // Jika semua approval terkait ditolak, perbarui finish_status
-                if ($relatedApprovals->every(function($approval) {
-                    return $approval->status === 'denied';
-                })) {
-                    $submission->update([
-                        'finish_status' => 'denied'
-                    ]);
-                }
-            }
+
+        // Update submissions
+        $updatedCount = Submission::whereIn('id', $selectedIds)
+            ->where('finish_status', 'process')
+            ->update([
+                'finish_status' => 'denied',
+            ]);
+
+        if ($updatedCount === 0) {
+            Log::info("Tidak ada submission yang diperbarui", ['selected_ids' => $selectedIds]);
+            return response()->json(['message' => 'Tidak ada submission dengan status process yang ditemukan'], 404);
         }
-    
-        return response()->json(["message" => "Semua submission terkait telah ditolak dan finish_status diperbarui jika perlu"], 200);
+
+        return response()->json(['message' => 'Approval dan submission berhasil ditolak'], 200);
+
+    } catch (\Exception $e) {
+        Log::error("Gagal memproses deniedall", ['error' => $e->getMessage()]);
+        return response()->json(['message' => 'Terjadi kesalahan saat memproses'], 500);
     }
-    
+}
+
+
      
 
     
