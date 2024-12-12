@@ -56,80 +56,96 @@ class DatabaseSeeder extends Seeder
         Position::create(['name' => 'CEO']);
         Position::create(['name' => 'Manager']);
         Position::create(['name' => 'GA']);
-        Position::create(['name' => 'Programmer']);
-        Position::create(['name' => 'IT Support']);
-        Department::create(['name' => 'IT Software']);
-        Department::create(['name' => 'Management']);
+        Position::create(['name' => 'Human Resource Staff']);
+        Position::create(['name' => 'Frontend Developer']);
+        Position::create(['name' => 'Backend Developer']);
+        Position::create(['name' => 'Data Enginer']);
+        Position::create(['name' => 'ML Enginer']);
+        Position::create(['name' => 'Account Staff']);
+        Position::create(['name' => 'Macro Staff']);
+        Department::create(['name' => 'Human Resource']);
+        Department::create(['name' => 'Software']);
         Department::create(['name' => 'Data']);
-        Department::create(['name' => 'Marchine leraning']);
+        Department::create(['name' => 'Account Management']);
+        Department::create(['name' => 'Finance']);
+        Department::create(['name' => 'General Affair']);
+        Department::create(['name' => 'Project Division']);
+        Department::create(['name' => 'HR Admin']);
+        Department::create(['name' => 'Product Department']);
         User::create([
             'role_id' => 1, 
             'position_id' => 2, 
-            'name' => ' Pak Megandi',
-            'username' => 'Pak Megandi',
-            'email' => 'Intiva@gmail.com',
-            'password' => Hash::make('aselole123'),
+            'name' => 'Megandi',
+            'username' => 'Megandi',
+            'email' => 'Megandi@intiva.id',
+            'password' => Hash::make('Megandi123'),
+            'path' => 'https://intiva.id/static/media/megandi2.9b979decc461a5c218911dc53fdf3fed.svg'
             
 
         ]);
         User::create([
             'role_id' => 2, 
             'position_id' => 3, 
-            'department_id' => 1,
-            'name' => ' Pak Elfin',
-            'username' => 'Pak Elfin',
-            'email' => 'Intiva1@gmail.com',
-            'password' => Hash::make('aselole123'),
+            'department_id' => 4,
+            'name' => 'Elfin Prayoga',
+            'username' => 'Elfin Prayoga',
+            'email' => 'Elfin@intiva.id',
+            'password' => Hash::make('Elfin123'),
+            'path' => 'https://intiva.id/static/media/elfin2.68d82bb11bed8858ffe332061a49878e.svg'
             
         ]);
         User::create([
             'role_id' => 2, 
             'position_id' => 3, 
             'department_id' => 2,
-            'name' => ' Pak Fatan',
-            'username' => 'Pak Fatan',
-            'email' => 'Intiva2@gmail.com',
-            'password' => Hash::make('aselole123'),
+            'name' => 'Fathan Satria',
+            'username' => 'Fathan Satria',
+            'email' => 'Fathan@intiva.id',
+            'password' => Hash::make('Fathan123'),
+            'path' => 'https://intiva.id/static/media/fathan2.7ae37ba57db1e354cf95aa07bce531fa.svg'
             
         ]);
         User::create([
             'role_id' => 2, 
             'position_id' => 3, 
             'department_id' => 3,
-            'name' => ' Pak Sahrul',
-            'username' => 'Pak Sahrul',
-            'email' => 'Intiva3@gmail.com',
-            'password' => Hash::make('aselole123'),
+            'name' => 'Sahrul',
+            'username' => 'Sahrul',
+            'email' => 'Sahrul@intiva.id',
+            'password' => Hash::make('Sahrul123'),
+            'path' => 'https://intiva.id/static/media/sahrul2.c8850f852a46bb5130899b023aa521ed.svg'
             
         ]);
         User::create([
             'role_id' => 2, 
             'position_id' => 3, 
-            'department_id' => 4,
-            'name' => ' Pak Adhyit',
-            'username' => 'Pak Adhyit',
-            'email' => 'Intiva4@gmail.com',
-            'password' => Hash::make('aselole123'),
+            'name' => 'Adhytia Ihza M',
+            'username' => 'Adhytia Ihza M',
+            'email' => 'Adhytia@intiva.id',
+            'password' => Hash::make('Adhytia123'),
+            'path' => 'https://intiva.id/static/media/adhytia2.4a4360675a335b5dcfa52bbd75ff0715.svg'
             
         ]);
 
         User::create([
             'role_id' => 3, 
             'position_id' => 4, 
-            'name' => ' Pak Edwin',
-            'username' => 'Pak Edwin',
-            'email' => 'Intiva5@gmail.com',
-            'password' => Hash::make('aselole123'),
+            'department_id' => 6,
+            'name' => 'General Affairs',
+            'username' => 'General Affairs',
+            'email' => 'Generalaffairs@intiva.id',
+            'password' => Hash::make('Generalaffairs'),
             
         ]);
 
         User::create([
             'role_id' => 4, 
             'position_id' => 1, 
-            'name' => 'Mbak Ismi',
-            'username' => 'Mbak Ismi',
-            'email' => 'Intiva6@gmail.com',
-            'password' => Hash::make('aselole123'),
+            'department_id' => 5,
+            'name' => 'Finance',
+            'username' => 'Finance',
+            'email' => 'Finance@intiva.com',
+            'password' => Hash::make('Finance'),
             
         ]);
 
@@ -144,137 +160,16 @@ class DatabaseSeeder extends Seeder
 
         ]);
 
-        User::create([
-            'role_id' => 5, 
-            'position_id' => 6, 
-            'department_id' => 2,
-            'name' => 'Bang Adam',
-            'username' => 'Bang Adam',
-            'email' => 'Intiva8@gmail.com',
-            'password' => Hash::make('aselole123'),
-
-        ]);
-
-        User::create([
-            'role_id' => 5, 
-            'position_id' => 1, 
-            'department_id' => 2,
-            'name' => 'MbaIsmi',
-            'username' => 'Mbakismi',
-            'email' => 'Intiva9@gmail.com',
-            'password' => Hash::make('aselole123'),
-
-        ]);
-
-        User::create([
-            'role_id' => 5, 
-            'position_id' => 2, 
-            'department_id' => 2,
-            'name' => 'Pak Gandi',
-            'username' => 'Pak Gandii',
-            'email' => 'Intiva10@gmail.com',
-            'password' => Hash::make('aselole123'),
-
-        ]);
-
-        User::create([
-            'role_id' => 5, 
-            'position_id' => 3, 
-            'department_id' => 2,
-            'name' => 'Pak elfin',
-            'username' => 'Pak elfinn',
-            'email' => 'Intiva11@gmail.com',
-            'password' => Hash::make('aselole123'),
-
-        ]);
-
-        User::create([
-            'role_id' => 5, 
-            'position_id' => 4, 
-            'department_id' => 2,
-            'name' => 'Pak edwin',
-            'username' => 'Pak edwinn',
-            'email' => 'Intiva12@gmail.com',
-            'password' => Hash::make('aselole123'),
-
-        ]);
-
-
-
        
-       Staff::create([
-            'manager_id' => 2,
-            'staff_id' => 9,
-       ]);
        Staff::create([
         'manager_id' => 3,
         'staff_id' => 8,
         ]);
 
-        Submission::create([
-            'user_id'  => 8,
-            'type' => 'Reimbursement',
-            'purpose' => 'agskagskags',
-            'submission_date' => Carbon::now(),
-            'due_date' => Carbon::now(),
-            'description' => 'kahjdgagdlj',
-            'bank_name' => 'Bank A',                    // Nama Bank
-            'account_name' => 'John Doe',               // Nama Pemegang Rekening
-            'account_number' => '1234567890',   
-            'finish_status' => 'process',
-            'amount' => 200000,
-        ]);
+     
 
-        Submission::create([
-            'user_id'  => 9,
-            'type' => 'Reimbursement',
-            'purpose' => 'agskagskags',
-            'submission_date' => Carbon::now(),
-            'due_date' => Carbon::now(),
-            'description' => 'kahjdgagdlj',
-            'bank_name' => 'Bank A',                    // Nama Bank
-            'account_name' => 'John Doe',               // Nama Pemegang Rekening
-            'account_number' => '1234567890',   
-            'finish_status' => 'process',
-            'amount' => 500000,
-        ]);
+      
 
-        SubmissionItem::create([
-            'submission_id' => 1,
-            'quantity' => 5,
-            'price' => 200000,
-        ]);
-
-        SubmissionItem::create([
-            'submission_id' => 2,
-            'quantity' => 2,
-            'price' => 500000,
-        ]);
-
-        AdminApproval::create([
-            'user_id' => 6,
-            'submission_id' => 2,
-            'status' => 'approved',
-            'notes' => 'diterima',
-            'approved_at' => Carbon::now()
-        ]);
-
-        AdminApproval::create([
-            'user_id' => 2,
-            'submission_id' => 2,
-            'status' => 'approved',
-            'notes' => 'diterima',
-            'approved_at' => Carbon::now()
-        ]);
-
-        AdminApproval::create([
-            'user_id' => 6,
-            'submission_id' => 1,
-            'status' => 'pending',
-            'notes' => 'diterima',
-            'approved_at' => Carbon::now()
-        ]);
-
-
+      
     }
 }

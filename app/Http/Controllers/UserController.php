@@ -107,9 +107,11 @@ class UserController extends Controller
     $perPage = $request->input('per_page', 10); 
 
 
-    $query = User::with(['role', 'position',  'department', 'staff.manager', 'staff.staffMember']);
-         
-
+    $query = User::with(['role', 'position', 'department', 'staff.manager', 'staff.staffMember'])
+        ->whereHas('role', function ($q) {
+            $q->where('name', 'Employee');
+        });
+        
     if ($search) {
         $query->where(function ($q) use ($search) {
             $q->where('name', 'LIKE', "%{$search}%")  
@@ -164,7 +166,7 @@ class UserController extends Controller
       $imagePath = $imageName;
   
       $user = User::create([
-          'role_id' => 2,
+          'role_id' => 5,
           'position_id' => $request->position_id,
           'department_id' => $request->department_id,
           'name' => $request->name,
