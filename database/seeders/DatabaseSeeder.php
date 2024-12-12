@@ -145,7 +145,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Finance',
             'username' => 'Finance',
             'email' => 'Finance@intiva.id',
-            'password' => Hash::make('Finance'),
+            'password' => Hash::make('Finance123'),
             
         ]);
 
