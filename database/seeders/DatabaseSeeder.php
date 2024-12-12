@@ -153,10 +153,10 @@ class DatabaseSeeder extends Seeder
             'role_id' => 5, 
             'position_id' => 5, 
             'department_id' => 1,
-            'name' => 'Bang Piko',
-            'username' => 'Bang Piko',
-            'email' => 'Intiva7@gmail.com',
-            'password' => Hash::make('aselole123'),
+            'name' => 'Nadiyah',
+            'username' => 'Nadiyah',
+            'email' => 'Nadiyah@intiva.id',
+            'password' => Hash::make('nadiyah123'),
 
         ]);
 
