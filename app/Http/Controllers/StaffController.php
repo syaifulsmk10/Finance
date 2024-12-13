@@ -18,18 +18,25 @@ class StaffController extends Controller
     }
 
 
-    public function manager()
+    public function manager(Request $request)
 {
+    $position_id = $request->query('position_id'); // Ambil parameter position_id dari request
+
+    if (in_array($position_id, [1, 2, 3, 4])) {
+        return response()->json([
+            'data' => [] // Tidak ada manager untuk position_id 1, 2, 3, 4
+        ]);
+    }
+
     $managers = User::whereHas('role', function ($query) {
         $query->where('name', 'Manager');
     })->get();
 
-
-    
     return response()->json([
         'data' => $managers
     ]);
 }
+
 
 
     /**
